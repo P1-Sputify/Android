@@ -1,6 +1,9 @@
 package se.mah.ad1107.sputify;
 
+import java.util.Set;
+
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -10,12 +13,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.Toast;
 
 public class SputifyActivity extends ActionBarActivity {
 	private BluetoothAdapter mBtAdapter;
 	private static final int REQUEST_ENABLE_BT = 1;
-
+	private Set<BluetoothDevice> mPairedDevices;
+	private ArrayAdapter<String> mArrayAdapter;
+	private ListView mBtDeviceList;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -98,5 +105,19 @@ public class SputifyActivity extends ActionBarActivity {
 		if (requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_OK) {
 			Toast.makeText(this, "Bluetooth turned on!", Toast.LENGTH_LONG).show();
 		}
+	}
+	
+	public void listBtDevices() {
+		 mPairedDevices = mBtAdapter.getBondedDevices();
+		// If there are paired devices
+		 if (mPairedDevices.size() > 0) {
+		     // Loop through paired devices
+		     for (BluetoothDevice device : mPairedDevices) {
+		         // Add the name and address to an array adapter to show in a ListView
+		         mArrayAdapter.add(device.getName() + "\n" + device.getAddress());
+		     }
+		 }
+		 mBtDeviceList = (ListView)findViewById(R.id.listView);
+		 mBtDeviceList.setAdapter(mArrayAdapter);
 	}
 }
