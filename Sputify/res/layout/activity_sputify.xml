@@ -28,10 +28,16 @@
         android:layout_height="wrap_content" 
         android:text="Välj Bluetoothenhet" />
     
-    <Button 
+    <Button
         android:id="@+id/button_connectButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="connect" />
+    
+    <Button
+        android:id="@+id/button_disconnect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="disconnect" />
 
 </LinearLayout>

@@ -41,6 +41,7 @@ public class SputifyActivity extends Activity {
 	private Button mConnectbutton;
 	private TextView mDeviceInfo;
 	private EditText mEditMessage;
+	private Button mDisconnectButton;
 	
 	private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // Standard UUID för seriell kommunikation
 	private static String mServerAdress; // Mac adressen till server ( i detta fall vår bluetooth modul.)
@@ -51,6 +52,7 @@ public class SputifyActivity extends Activity {
 	// Threads
 	private ConnectThread mConnectThread;
 	private manageConnectionThread mManagConnectionThread;
+	
 	
 	
 	// Konstanter för bluetoothStates
@@ -104,6 +106,16 @@ public class SputifyActivity extends Activity {
 			public void onClick(View v) {
 				connect();
 				
+			}
+		});
+		
+		mDisconnectButton = (Button)findViewById(R.id.button_disconnect);
+		mDisconnectButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				mManagConnectionThread = null;
+				mConnectThread = null;
 			}
 		});
 	}
