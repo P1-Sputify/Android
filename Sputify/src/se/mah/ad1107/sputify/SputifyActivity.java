@@ -17,6 +17,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * En klass som används för att skicka strängar över bluetooth.
@@ -28,8 +29,6 @@ public class SputifyActivity extends Activity {
 	private static final String TAG = "SputifyActivity"; // Används för debug syfte
 	
 	private BluetoothAdapter mBluetoothAdapter; // Används för att ha en instans av mobilens bluetooth enhet
-//	private BluetoothSocket btSocket = null; // Socketen som kommer att användas för att skicka data
-//	private OutputStream outStream = null; // utströmmen
 	
 	// Konstanter för olika requests
 	public final int REQUEST_ENABLE_BT = 1; // Används för att kunna identifera rätt resultat från startBt activity
@@ -63,9 +62,6 @@ public class SputifyActivity extends Activity {
 	
 	private int btState = BT_STATE_DISCONNECTED;
 	
-	
-	
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -90,6 +86,7 @@ public class SputifyActivity extends Activity {
 		mEditMessage = (EditText)findViewById(R.id.editText_Message);
 		
 		mSendButton = (Button)findViewById(R.id.button_SendMessage);
+		mSendButton.setEnabled(false); // Ska inte gå och skicka än.
 		mSendButton.setOnClickListener(new OnClickListener() {
 			
 			@Override
@@ -100,6 +97,7 @@ public class SputifyActivity extends Activity {
 		});
 		
 		mConnectbutton = (Button)findViewById(R.id.button_connectButton);
+		mConnectbutton.setEnabled(false); // Knappen ska inte gå och klicka på än
 		mConnectbutton.setOnClickListener(new OnClickListener() {
 			
 			@Override
@@ -116,6 +114,7 @@ public class SputifyActivity extends Activity {
 			public void onClick(View v) {
 				mManagConnectionThread = null;
 				mConnectThread = null;
+				mSendButton.setEnabled(false); // Knappen ska inte gå att trycka på
 			}
 		});
 	}
@@ -144,7 +143,6 @@ public class SputifyActivity extends Activity {
 	
 	/**
 	 * Metoden försöker skapa en anslutning mellan den valda bluetooth enheten.
-	 * Detta bör göras i en tråd
 	 */
 	public void connect() {
 		mConnectThread = new ConnectThread(mSelectedDevice);
@@ -162,11 +160,17 @@ public class SputifyActivity extends Activity {
 		mManagConnectionThread.write(message);
 	}
 	
+	/**
+	 * Startart en ny activity för att välja bluetooth enhet
+	 */
 	private void selectBTDevice() {
 		Intent intent = new Intent(this, SelectDeviceActivity.class);
 		startActivityForResult(intent, REQUEST_SELECT_BT);
 	}
 	
+	/**
+	 * Används för att upptadera mDeviceInfo textfield.
+	 */
 	private void updateInfo() {
 		switch(btState) {
 		case BT_STATE_DISCONNECTED:
@@ -180,6 +184,7 @@ public class SputifyActivity extends Activity {
 		}
 	}
 	
+	 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		Log.d(TAG, "In OnActicityResult");
@@ -198,6 +203,7 @@ public class SputifyActivity extends Activity {
 					Log.d(TAG, mSelectedDevice.getAddress());
 					if(mSelectedDevice != null) {
 						mDeviceInfo.setText(mSelectedDevice.toString());
+						mConnectbutton.setEnabled(true); // Man ska kunna upprätta en anslutning
 					}
 				}
 			default:
@@ -213,6 +219,7 @@ public class SputifyActivity extends Activity {
 	private class ConnectThread extends Thread {
 		private final BluetoothSocket mmSocket;
 		private final BluetoothDevice mmDevice;
+		
 		
 		/**
 		 * Skapar en socket som är kopplat till en Bluetooth enhet
@@ -240,8 +247,9 @@ public class SputifyActivity extends Activity {
 		@Override
 		public void run() {
 			try{
-				mmSocket.connect(); // Försöker ansluta till den valda enheten. Detta anrop kommer att blockera appaen tills att den lyckas eller misslyckas. Lägg i thread när vi får det att fungera
-				Log.d(TAG, "Trying to connect to the bluetooth device"); // Kommer att blockerar programet tills den connectar. Därför bör detta läggas i en thread.
+				mmSocket.connect(); // Försöker ansluta till den valda enheten. Detta anrop kommer att blockera tråden tills att den lyckas eller misslyckas. 
+				Log.d(TAG, "Trying to connect to the bluetooth device");
+				
 			} catch(IOException e) {
 				try {
 					Log.d(TAG, "Closing Socket....");
@@ -287,7 +295,7 @@ public class SputifyActivity extends Activity {
 				tmpInStream = socket.getInputStream();
 				tmpOutStream = socket.getOutputStream();
 			} catch(IOException e) {
-				//FelMeddelande
+				Log.d(TAG, " Output or Input stream faield");
 			}
 			mmInStream = tmpInStream;
 			mmOutputStream = tmpOutStream;
