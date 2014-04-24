@@ -18,13 +18,18 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+/**
+ * En klass som används för att skicka strängar över bluetooth.
+ * @author Patrik
+ *
+ */
 public class SputifyActivity extends Activity {
 	
 	private static final String TAG = "SputifyActivity"; // Används för debug syfte
 	
 	private BluetoothAdapter mBluetoothAdapter; // Används för att ha en instans av mobilens bluetooth enhet
-	private BluetoothSocket btSocket = null; // Socketen som kommer att användas för att skicka data
-	private OutputStream outStream = null; // utströmmen
+//	private BluetoothSocket btSocket = null; // Socketen som kommer att användas för att skicka data
+//	private OutputStream outStream = null; // utströmmen
 	
 	// Konstanter för olika requests
 	public final int REQUEST_ENABLE_BT = 1; // Används för att kunna identifera rätt resultat från startBt activity
@@ -36,7 +41,6 @@ public class SputifyActivity extends Activity {
 	private Button mConnectbutton;
 	private TextView mDeviceInfo;
 	private EditText mEditMessage;
-	private Button mConnectButton;
 	
 	private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // Standard UUID för seriell kommunikation
 	private static String mServerAdress; // Mac adressen till server ( i detta fall vår bluetooth modul.)
@@ -50,10 +54,12 @@ public class SputifyActivity extends Activity {
 	
 	
 	// Konstanter för bluetoothStates
-	private final int BT_STATE_CONNECTED = 1;
 	private final int BT_STATE_DISCONNECTED = 0;
+	private final int BT_STATE_CONNECTED = 1;
 	private final int BT_STATE_CONNECTING = 2;
 	private final int BT_STATE_SENDING = 3;
+	
+	private int btState = BT_STATE_DISCONNECTED;
 	
 	
 	
@@ -149,6 +155,19 @@ public class SputifyActivity extends Activity {
 		startActivityForResult(intent, REQUEST_SELECT_BT);
 	}
 	
+	private void updateInfo() {
+		switch(btState) {
+		case BT_STATE_DISCONNECTED:
+			mDeviceInfo.setText("Ingen Bluetooth enhet är ansluten");
+		case BT_STATE_CONNECTED:
+			mDeviceInfo.setText("Du är ansluten till" + mSelectedDevice.getName());
+		case BT_STATE_CONNECTING:
+			mDeviceInfo.setText("Försöker ansluta till" + mSelectedDevice.getName());
+		case BT_STATE_SENDING:
+			mDeviceInfo.setText("Skickar till" + mSelectedDevice.getName());
+		}
+	}
+	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		Log.d(TAG, "In OnActicityResult");
@@ -174,11 +193,20 @@ public class SputifyActivity extends Activity {
 		}
 		}
 	}
-	
+	/**
+	 * En tråd som används för att skapa en anslutning till en bluetooth enhet
+	 * @author Patrik
+	 *
+	 */
 	private class ConnectThread extends Thread {
 		private final BluetoothSocket mmSocket;
 		private final BluetoothDevice mmDevice;
 		
+		/**
+		 * Skapar en socket som är kopplat till en Bluetooth enhet
+		 * @param device
+		 * 		Ett objekt av typen BluetoothDevice som man ska ansluta till
+		 */
 		public ConnectThread(BluetoothDevice device) {
 			// Använd ett temporärt objekt som sennare kommer att tilldelas mmSocket
 			BluetoothSocket tmp = null;
@@ -194,7 +222,9 @@ public class SputifyActivity extends Activity {
 			}
 			mmSocket = tmp;
 		}
-		
+		/**
+		 * Skapar en anslutning
+		 */
 		@Override
 		public void run() {
 			try{
@@ -210,7 +240,9 @@ public class SputifyActivity extends Activity {
 				}
 			}
 		}
-		
+		/**
+		 * Används för att stänga anslutningen
+		 */
 		public void cancel() {
 			try{
 				mmSocket.close();
@@ -219,12 +251,21 @@ public class SputifyActivity extends Activity {
 			}
 		}
 	}
-	
+	/**
+	 * Tråden hanterar dataöverförningen
+	 * @author Patrik
+	 *
+	 */
 	private class manageConnectionThread extends Thread {
 		private final BluetoothSocket mmSocket;
 		private final InputStream mmInStream;
 		private final OutputStream mmOutputStream; // För denna sprinten behövs förmodligen inte denna
 		
+		/**
+		 * En Konstruktor som skapar en ut och in ström
+		 * @param socket
+		 * 		En Bluetoothsocket som är ansluten till en bluetooth enhet
+		 */
 		public manageConnectionThread(BluetoothSocket socket) {
 			mmSocket = socket;
 			InputStream tmpInStream = null;
@@ -240,10 +281,17 @@ public class SputifyActivity extends Activity {
 			mmOutputStream = tmpOutStream;
 		}
 		
+		/**
+		 * Används för att läsa av inkommande data
+		 */
 		public void run() {
 			byte[] buffer = new byte [1024];
 		}
-		
+		/**
+		 * Skriver en sträng till outPutStream.
+		 * @param message
+		 * 		Det meddelande som man vill skicka
+		 */
 		public void write(String message) {
 			byte[] buffer = message.getBytes();
 			try{
@@ -252,9 +300,12 @@ public class SputifyActivity extends Activity {
 				// Visa felmeddleande
 			}
 		}
-		
+		/**
+		 * Används för att stänga socketen.
+		 */
 		public void cancel() {
 			try{
+				mmOutputStream.close();
 				mmSocket.close();
 			} catch (IOException e) {};
 		}
