@@ -2,55 +2,30 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal" >
+    android:orientation="vertical" >
 
-    <ListView
-        android:id="@+id/list"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" >
-    </ListView>
-
-    <LinearLayout
+    <TextView
+        android:id="@+id/text_BluetoothInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" >
-
-        <EditText
-            android:id="@+id/edit_message"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="@string/edit_message" />
-
-        <Button
-            android:id="@+id/send_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/send_button" />
-
-        <Button
-            android:id="@+id/connect_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/connect_button" />
-    </LinearLayout>
-
-    <LinearLayout
+        android:text="test" />
+    
+    <EditText 
+        android:id="@+id/editText_Message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" >
+        android:hint="Skriv ett meddelande" />
+    
+    <Button
+        android:id="@+id/button_SendMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sänd Meddleande" />
 
-        <Button
-            android:id="@+id/btOn_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/btOn_button" />
-
-        <Button
-            android:id="@+id/btOff_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/btOff_button" />
-    </LinearLayout>
+    <Button
+        android:id="@+id/button_SelectBluetoothDevice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" 
+        android:text="Välj Bluetoothenhet" />
 
 </LinearLayout>

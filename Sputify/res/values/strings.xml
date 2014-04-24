@@ -9,5 +9,6 @@
     <string name="btOn_button">Bluetooth On</string>
     <string name="btOff_button">Bluetooth Off</string>
     <string name="connect_button">Connect</string>
+    <string name="title_activity_select_device">SelectDeviceActivity</string>
 
 </resources>

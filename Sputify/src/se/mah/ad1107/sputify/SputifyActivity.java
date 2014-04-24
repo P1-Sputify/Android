@@ -1,5 +1,3 @@
-//Test så att git fungerar
-
 package se.mah.ad1107.sputify;
 
 import java.io.IOException;
@@ -13,38 +11,41 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
+import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
+import android.widget.TextView;
 
 public class SputifyActivity extends Activity {
+	
 	private static final String TAG = "SputifyActivity"; // Används för debug syfte
 	
 	private BluetoothAdapter mBluetoothAdapter; // Används för att ha en instans av mobilens bluetooth enhet
 	private BluetoothSocket btSocket = null; // Socketen som kommer att användas för att skicka data
 	private OutputStream outStream = null; // utströmmen
 	
-	private final int REQUEST_ENABLE_BT = 1; // Används för att kunna identifera rätt resultat från startBt activity
-	private ListView mList; // Lista med bluetooth enheter som är paraade
-	private ArrayAdapter<String> mArrayAdapter; // Hanterar list items
-	private Set<BluetoothDevice> mPairedDevices; // Ett set med bluetoothenheter
+	// Konstanter för olika requests
+	public final int REQUEST_ENABLE_BT = 1; // Används för att kunna identifera rätt resultat från startBt activity
+	public final int REQUEST_SELECT_BT = 2; // Används för att idenfierar resultat från en intent.
+	
+	//Gui
+	private Button mSelectDevicebutton;
+	private Button mSendButton;
+	private Button mConnectbutton;
+	private TextView mDeviceInfo;
+	private EditText mEditMessage;
 	
 	private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // Standard UUID för seriell kommunikation
-	
 	private static String mServerAdress; // Mac adressen till server ( i detta fall vår bluetooth modul.)
 	
 	
-	private BluetoothDevice mSelectedDevice; // En pekarare till den valda enheten
+	private BluetoothDevice mSelectedDevice = null; // En pekarare till den valda enheten
+	
+	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -52,52 +53,34 @@ public class SputifyActivity extends Activity {
 		Log.d(TAG, "On Create");
 		setContentView(R.layout.activity_sputify);
 		
+		mDeviceInfo = (TextView)findViewById(R.id.text_BluetoothInfo);
+		mDeviceInfo.setText("Ingen bluetooth enhet är vald");
+		
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter(); // Hämtar telefonens bluetooth radio
 		checkBTState(); // Enable bluetooth om den är inaktiverad
 		
-		// Skapar listan med parade bluetooth enheter
-		mList = (ListView)findViewById(R.id.list);
-		mArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
-		getPairedDevices();
-		mList.setAdapter(mArrayAdapter);
-		// När man klickar på ett föremål i listan så ska den selectade enheten visas
-		// TODO Ska man hård koda detta istället så att man bara kan ansluta till vår enheten?
-		mList.setOnItemClickListener(new OnItemClickListener() {
-
+		mSelectDevicebutton = (Button)findViewById(R.id.button_SelectBluetoothDevice);
+		mSelectDevicebutton.setOnClickListener(new OnClickListener() {
+			
 			@Override
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id) {
-				String text = mArrayAdapter.getItem(position);
-				String parts[] = text.split("\n");
-				mServerAdress = parts[1];
-				mSelectedDevice = mBluetoothAdapter.getRemoteDevice(mServerAdress);
-				connect();
-				sendData("f");
+			public void onClick(View v) {
+				selectBTDevice();
+			}
+		});
+		
+		mEditMessage = (EditText)findViewById(R.id.editText_Message);
+		
+		mSendButton = (Button)findViewById(R.id.button_SendMessage);
+		mSendButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				String message = mEditMessage.getText().toString();
+				sendData(message);
 			}
 		});
 	}
-
-//	@Override
-//	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//		       if(requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_OK){
-//		    	   Toast.makeText(this,"BT ENABLED", Toast.LENGTH_LONG).show();
-//		       }
-//	}
-	
-	
-	/**
-	 * Medoden lägger till redan parade enheter i en arrayAdapter som hanterar listan för parade bluetoothenheter
-	 */
-	public void getPairedDevices(){
-		mPairedDevices = mBluetoothAdapter.getBondedDevices();
-		if (mPairedDevices.size() > 0) {
-		    // Gå igenom redan alla paraade enheter
-		    for (BluetoothDevice device : mPairedDevices) {
-		        // Lägg tilll namnet och adressen i adaptern för att visa i listan.
-		        mArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-		    }
-		}
-	}
+		
 	
 	/**
 	 * Kontrollerar om Mobilen har stöd för bluetooth, om den har det så kontrollerar man om den är på annars så
@@ -122,6 +105,7 @@ public class SputifyActivity extends Activity {
 	
 	/**
 	 * Metoden försöker skapa en anslutning mellan den valda bluetooth enheten.
+	 * Detta bör göras i en tråd
 	 */
 	public void connect() {
 		try {
@@ -159,6 +143,7 @@ public class SputifyActivity extends Activity {
 	
 	/**
 	 * Metoden används för att skicka data till bluetooth enheten
+	 * Bör också göras i en tråd
 	 * @param message
 	 * 		En sträng med det man vill skicka
 	 */
@@ -170,4 +155,41 @@ public class SputifyActivity extends Activity {
 			Log.d(TAG, "Exception thron while writing data" + e.getMessage());
 		}
 	}
+	
+	private void selectBTDevice() {
+		Intent intent = new Intent(this, SelectDeviceActivity.class);
+		startActivityForResult(intent, REQUEST_SELECT_BT);
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		Log.d(TAG, "In OnActicityResult");
+		if(requestCode == REQUEST_SELECT_BT && resultCode == RESULT_OK ){
+			mSelectedDevice = mBluetoothAdapter.getRemoteDevice(data.getExtras().getString(SelectDeviceActivity.EXTRA_DEVICE_ADRESS));
+			Log.d(TAG, mSelectedDevice.getAddress());
+			if(mSelectedDevice != null) {
+				mDeviceInfo.setText(mSelectedDevice.toString());
+				connect();
+			}
+			
+			switch (requestCode) {
+			case REQUEST_SELECT_BT:
+				if(resultCode == RESULT_OK) {
+					Log.d(TAG, data.getExtras().getString(SelectDeviceActivity.EXTRA_DEVICE_ADRESS));
+					mSelectedDevice = mBluetoothAdapter.getRemoteDevice(data.getExtras().getString(SelectDeviceActivity.EXTRA_DEVICE_ADRESS));
+					Log.d(TAG, mSelectedDevice.getAddress());
+					if(mSelectedDevice != null) {
+						mDeviceInfo.setText(mSelectedDevice.toString());
+					}
+				}
+			default:
+				super.onActivityResult(requestCode, resultCode, data);
+		}
+		}
+	}
+	
 }
+
+
+	
+

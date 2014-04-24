@@ -25,6 +25,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="se.mah.ad1107.sputify.SelectDeviceActivity"
+            android:label="@string/title_activity_select_device"
+            android:parentActivityName="se.mah.ad1107.sputifynew.MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="se.mah.ad1107.sputifynew.MainActivity" />
+        </activity>
     </application>
 
 </manifest>
